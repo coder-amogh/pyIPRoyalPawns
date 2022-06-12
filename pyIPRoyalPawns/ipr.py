@@ -173,7 +173,7 @@ class IPRoyalPawns:
 
 		response = self.__make_request("GET", "/", allow_redirects = False)
 
-		if not response.ok:
+		if response.status_code == 302 or not response.ok:
 			return NotLoggedInError
 
 		home_parsed_payload = IPRoyalPawnsHTMLWebpageParser.home(response)
