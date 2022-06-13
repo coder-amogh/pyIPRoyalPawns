@@ -6,7 +6,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = "\n" + fh.read()
 
-VERSION = "0.2.1"
+VERSION = "0.2.2"
 DESCRIPTION = "UNOFFICIAL Python bindings for IPRoyal Pawns Dashboard API"
 LONG_DESCRIPTION = "A package that allows you to connect to IPRoyal Pawns API and interact with your data."
 
@@ -19,7 +19,7 @@ setup(
     long_description_content_type = "text/markdown",
     long_description = long_description,
     packages = find_packages(),
-    install_requires = ['requests', 'pySocks', 'beautifulsoup4'],
+    install_requires = ['requests', 'pySocks', 'beautifulsoup4', 'lxml'],
     url = "https://github.com/coder-amogh/pyIPRoyalPawns",
     project_urls = {
         "Bug Tracker": "https://github.com/coder-amogh/pyIPRoyalPawns/issues",
