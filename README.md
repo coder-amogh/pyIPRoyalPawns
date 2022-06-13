@@ -69,6 +69,14 @@ user.set_proxy("ip:port")
     ```
 ---
 
+3. Get all the devices
+
+    ```PYTHON
+    # Get all the devices shown on dashboard
+    user.devices()
+    ```
+---
+
 ## Exceptions
 
 - The following exceptions are defined.
