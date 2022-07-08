@@ -225,8 +225,7 @@ class IPRoyalPawns:
 		# Call homepage to get the CSRF token and return response
 		response = self.__make_request("GET", "/")
 
-		if not response.ok:
-			raise IPRoyalPawnsAPIError
+		self.__handle_api_error(response)
 
 		return response
 
