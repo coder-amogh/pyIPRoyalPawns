@@ -31,7 +31,7 @@ user = IPRoyalPawns()
 |----------------|--------------------|---------------------------------|
 | API_BASE_URL | The API BASE URL | https://api.pawns.app                            |
 | API_PREFIX | The API PREFIX | /api                            |
-| API_PREFIX | The API PREFIX | /v1                            |
+| API_VERSION | The API VERSION | /v1                            |
 
 ```PYTHON
 # Call the login method
