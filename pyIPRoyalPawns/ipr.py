@@ -1,286 +1,213 @@
-from bs4 import BeautifulSoup as BS
-
 import requests
-
-import pickle
+import random
+import string
 
 from .exceptions import *
 
-class IPRoyalPawnsHTMLWebpageParser:
-	@classmethod
-	def login(cls, response) -> dict:
-		"""Parses the login page and returns the required payload"""
-		try:
-			payload = {}
-
-			soup = BS(response.text, "lxml")
-
-			input_token_el = soup.find("input", {
-				"type": "hidden",
-				"name": "_token",
-			})
-
-			token = input_token_el.get("value")
-
-			payload["token"] = token
-
-		except:
-			raise HTMLWebpageParserError
-
-		return payload
-
-	@classmethod
-	def home(cls, response) -> dict:
-		"""Parses the home page of the dashboard and returns the required payload"""
-		payload = {}
-
-		try:
-			soup = BS(response.text, "lxml")
-	
-			balance_traffic_section = soup.select_one("section.ipr-card.payment_card")
-
-			balance = balance_traffic_section.select_one(".payment_card__amount")
-
-			# Balance
-			payload["balance"] = balance.text.strip()
-
-			traffic = balance_traffic_section.select_one(".payment_card__traffic")
-
-			# Traffic
-			payload["traffic"] = traffic.text.strip()
-
-			# devices_section = soup.select_one("section.active_devices_card")
-
-			# devices_list = devices_section.select_one("ul.active_devices__list")
-
-			devices_list = soup.select_one("ul.active_devices__list")
-
-			devices = devices_list.select("li.active_devices__item.active_devices__list-item")
-			
-			payload_devices = []
-
-			for device in devices:
-				device_info = {}
-
-				device_info["ip"] = device.select_one("div").text.strip()
-				device_info["platform"] = device.select_one("img.active_devices__platform").get("title").title()
-				device_info["country"] = device.select_one("i.active_devices__flag-icon").get("title").upper()
-
-				payload_devices.append(device_info)
-
-			# Devices
-			payload["devices"] = payload_devices
-
-			try:
-				referral_link = soup.select_one("input.aff_card__text-field.js-ref-url-aff-card").get("value")
-
-				payload["referral_link"] = referral_link
-
-			except:
-				# Ignore the unimportant parser failures and continue
-				pass
-
-		except:
-			raise HTMLWebpageParserError
-
-		return payload
-
-	@classmethod
-	def devices(cls, response) -> list:
-		"""Parses devices information on a specific page and returns the required payload"""
-		payload_devices = []
-
-		try:
-			soup = BS(response.text, "lxml")
-
-			devices_list = soup.select_one("ul.active_devices__list")
-
-			devices = devices_list.select("li.active_devices__item.active_devices__list-item")
-
-			for device in devices:
-				device_info = {}
-
-				device_info["ip"] = device.select_one("div").text.strip()
-				device_info["platform"] = device.select_one(
-					"img.active_devices__platform").get("title").title()
-				device_info["country"] = device.select_one(
-					"i.active_devices__flag-icon").get("title").upper()
-
-				payload_devices.append(device_info)
-		except:
-			raise HTMLWebpageParserError
-
-		# Devices
-		return payload_devices
-
-	@classmethod
-	def devices_pagination(cls, response) -> dict:
-		"""Parses devices pagination information and returns the required payload"""	
-		try:
-			soup = BS(response.text, "lxml")
-
-			pagination_ul = soup.select_one("ul.pagination")
-
-			if pagination_ul is None:
-				return {
-					"previous": None,
-					"first": None,
-					"active": None,
-					"next": None,
-					"last": None,
-				}
-
-			active = int(pagination_ul.select_one("li.page-item.active").get_text().strip())
-
-			first = int(pagination_ul.select("li.page-item")[1].get_text().strip())
-
-			last = int(pagination_ul.select("li.page-item")[-2].get_text().strip())
-
-			previous = None if active == 1 else active - 1
-
-			next_ = None if last == active else active + 1
-
-			return {
-				"previous": previous,
-				"first": first,
-				"active": active,
-				"next": next_,
-				"last": last,
-			}
-
-		except:
-			raise HTMLWebpageParserError
-
 class IPRoyalPawns:
-	def __init__(self, API_BASE_URL = "https://pawns.iproyal.com") -> None:
-		"""Initialises IPRoyalPawns class"""
-		self.API_BASE_URL = API_BASE_URL
-		self.empty_session()
+	__LOGIN_TOKEN_LENGTH = 21
+
+	def __init__(self, API_BASE_URL = "https://api.pawns.app", API_PREFIX = "/api", API_VERSION = "/v1") -> None:
+		"""Initialises IPRoyalPawns class. """
+		self.API_URL = API_BASE_URL + API_PREFIX + API_VERSION
+
+		self.remove_all_headers()
+		self.add_default_headers({
+			"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36",
+			"X-Locale": "EN",
+		})
+
 		self.remove_proxy()
+		self.logout()
 
-	def save_session(self, filepath = "session.pkl") -> bool:
-		"""Saves the IPRoyal session into a file"""
-		with open(filepath, "wb") as f:
-			pickle.dump(self._session, f)
+	def remove_all_headers(self) -> bool:
+		"""Removes all default headers for future requests. """
+		self.__headers = {}
+
+	def add_default_headers(self, headers: dict = {}) -> bool:
+		"""Adds default headers for future requests. Could be used to set user-agent for example. """
+		self.__headers = {
+			**self.__headers, **headers
+		}
 
 		return True
 
-	def load_session(self, filepath = "session.pkl") -> bool:
-		"""Loads the IPRoyal session from a file"""
-		with open(filepath, "rb") as f:
-			self._session = pickle.load(f)
+	def __return_response(self, response) -> dict:
+		result = {}
 
-		return True
+		result["success"] = bool(response.ok)
+		result["json"] = response.json()
+		result["response"] = response
 
-	def empty_session(self) -> bool:
-		"""Empties the session"""
-		self._session = requests.Session()
-		return True
+		return result
+
+	def logout(self) -> bool:
+		return self.set_jwt_token(None)
 
 	def __make_request(self, req_type: str, endpoint: str, headers: dict = {}, *args, **kwargs):
 		"""Helper function to make requests. """
 
-		return self._session.request(req_type, f'{self.API_BASE_URL}{endpoint}', proxies = self.proxy_conf, headers = headers, *args, **kwargs)
+		return requests.request(req_type, f'{self.API_URL}{endpoint}', proxies = self.proxy_conf, headers = {
+            **self.__headers, **headers, **({
+                "Authorization": f"Bearer {self.jwt}",
+            } if self.is_logged_in() else {}),
+        }, *args, **kwargs)
 
-	def set_proxy(self, proxy_str: str = None) -> bool:
+	def set_proxy(self, proxy_str: str = None, protocol: str = "socks5") -> bool:
 		"""Sets the proxy for future API requests."""
+
+		if proxy_str is None:
+			self.proxy_conf = None
+			return True
+
 		proxy = proxy_str.split(":")
 
 		if len(proxy) > 2:
 			ip, port, username, password = proxy
 
 			self.proxy_conf = {
-				"http": f"socks5://{username}:{password}@{ip}:{port}",
-				"https": f"socks5://{username}:{password}@{ip}:{port}",
+				"http": f"{protocol}://{username}:{password}@{ip}:{port}",
+				"https": f"{protocol}://{username}:{password}@{ip}:{port}",
 			}
 		else:
 			ip, port = proxy
 
 			self.proxy_conf = {
-				"http": f"socks5://{ip}:{port}",
-				"https": f"socks5://{ip}:{port}",
+				"http": f"{protocol}://{ip}:{port}",
+				"https": f"{protocol}://{ip}:{port}",
 			}
 
 		return True
 
+	def set_socks5_proxy(self, proxy_str: str = None) -> bool:
+		"""Sets SOCKS5 proxy for future API requests. """
+		return self.set_proxy(proxy_str, "socks5")
+
+	def set_http_proxy(self, proxy_str: str = None) -> bool:
+		"""Sets HTTP proxy for future API requests. """
+		return self.set_proxy(proxy_str, "http")
+
+	def set_https_proxy(self, proxy_str: str = None) -> bool:
+		"""Sets HTTPS proxy for future API requests. """
+		return self.set_proxy(proxy_str, "https")
+
 	def remove_proxy(self) -> bool:
-		"""Removes the proxy for future API requests."""
-		self.proxy_conf = None
-		return True
+		"""Removes the proxy for future API requests. """
+		return self.set_proxy(None)
 
-	def __handle_not_logged_in(self, response) -> None:
-		if response.status_code == 302:
+	def __handle_not_logged_in(self) -> None:
+		if not self.is_logged_in():
 			raise NotLoggedInError
-
-	def __handle_api_error(self, response) -> None:
-		if not response.ok:
-			raise IPRoyalPawnsAPIError
 
 	def __prepare_login(self) -> bool:
 		"""Prepares login"""
 
-		# Empty the session
-		self.empty_session()
+		return {
+			"token": self.__get_login_token(),
+		}
 
-		# Call homepage to get the CSRF token and return response
-		response = self.__make_request("GET", "/")
+	def __get_login_token(self) -> str:
+		"""IPRoyalPawns needs a 21 characters (which include uppercase, lowercase and numbers) long as an ID/token. We generate it on the client-side and send it. """
 
-		self.__handle_api_error(response)
+		return ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits + string.ascii_lowercase) for _ in range(IPRoyalPawns.__LOGIN_TOKEN_LENGTH))
 
-		return response
+	def is_logged_in(self) -> bool:
+		"""Returns if we're logged in or not. """
+		return self.jwt is not None
 
-	def login(self, email: str, password: str) -> bool:
-		"""Logs in into the IPRoyalPawns dashboard"""
+	def set_jwt_token(self, jwt: str = None) -> bool:
+		"""Sets the JWT token for future requests. """
+		self.jwt = jwt
+		return True
 
-		prepared_login_response = self.__prepare_login()
+	def login(self, email: str, password: str, h_captcha_response: str = "") -> dict:
+		"""Logs in into the IPRoyalPawns dashboard. """
 
-		login_parsed_payload = IPRoyalPawnsHTMLWebpageParser.login(prepared_login_response)
+		if self.is_logged_in():
+			raise AlreadyLoggedInError
 
-		token = login_parsed_payload["token"]
+		prepared_login_info = self.__prepare_login()
 
-		response = self.__make_request("POST", "/login", data = {
-			"_token": token,
+		token = prepared_login_info["token"]
+
+		response = self.__make_request("POST", "/users/tokens", json = {
+			"identifier": token,
 			"email": email,
-			"password": password
-		}, allow_redirects = True)
+			"password": password,
+			"h_captcha_response": h_captcha_response,
+		})
 
-		return response.ok
+		return self.__return_response(response)
 
-	def dashboard(self) -> dict:
-		"""Returns information shown on the main page of the dashboard"""
+	def me(self) -> dict:
+		"""Returns information about the logged in user. """
+		self.__handle_not_logged_in()
 
-		response = self.__make_request("GET", "/", allow_redirects = False)
+		response = self.__make_request("GET", "/users/me")
 
-		self.__handle_not_logged_in(response)
-		self.__handle_api_error(response)
+		return self.__return_response(response)
 
-		home_parsed_payload = IPRoyalPawnsHTMLWebpageParser.home(response)
+	def devices(self, page: int = 1, items_per_page: int = 20) -> dict:
+		"""Returns all the devices information. """
+		self.__handle_not_logged_in()
 
-		return home_parsed_payload
+		response = self.__make_request("GET", "/users/me/devices", params = {
+			"page": page,
+			"items_per_page": items_per_page,
+		})
 
-	def devices(self) -> dict:
-		"""Returns all the devices information (the dashboard() only returns upto 5 devices)"""
-		response = self.__make_request("GET", "/active-devices")
+		return self.__return_response(response)
 
-		self.__handle_not_logged_in(response)
-		self.__handle_api_error(response)
+	def balance(self) -> dict:
+		"""Returns balance information. """
+		self.__handle_not_logged_in()
 
-		pagination = IPRoyalPawnsHTMLWebpageParser.devices_pagination(response)
+		response = self.__make_request("GET", "/users/me/balance")
 
-		if pagination["first"] is None or pagination["last"] is None:
-			raise HTMLWebpageParserError
+		return self.__return_response(response)
 
-		devices = []
+	def payouts(self, page: int = 1) -> dict:
+		"""Returns payouts information. """
+		self.__handle_not_logged_in()
 
-		for page in range(pagination["first"], pagination["last"] + 1):
-			response = self.__make_request("GET", f"/active-devices?page={page}")
+		response = self.__make_request("GET", "/users/me/payouts", params = {
+			"page": page,
+		})
 
-			devices_page_parsed_payload = IPRoyalPawnsHTMLWebpageParser.devices(response)
+		return self.__return_response(response)
 
-			devices.extend(devices_page_parsed_payload)
+	def affiliate_payouts(self, page: int = 1) -> dict:
+		"""Returns affiliate payouts information. """
+		self.__handle_not_logged_in()
 
-		return devices
+		response = self.__make_request("GET", "/users/me/affiliate/payouts", params = {
+			"page": page,
+		})
+
+		return self.__return_response(response)
+
+	def countries(self) -> dict:
+		"""Returns countries information. Used in payout_methods() for example. """
+
+		response = self.__make_request("GET", "/countries")
+
+		return self.__return_response(response)
+
+	def payout_methods(self, country_id: int) -> dict:
+		"""Returns payout methods available in your country. Use `countries()` to get the `country_id`. """
+
+		response = self.__make_request("GET", f"/countries/{country_id}/payout-methods")
+
+		return self.__return_response(response)
+	
+	def affiliate_stats(self) -> dict:
+		"""Returns affiliate stats information. """
+		self.__handle_not_logged_in()
+
+		response = self.__make_request("GET", "/users/me/affiliate/stats")
+
+		return self.__return_response(response)
 
 	def __repr__(self):
-		"""Represents the IPRoyalPawns object"""
+		"""Represents the IPRoyalPawns object. """
 		return f"<IPRoyalPawns object at {hex(id(self))}>"
