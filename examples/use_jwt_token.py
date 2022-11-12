@@ -1,11 +1,14 @@
 from pyIPRoyalPawns import IPRoyalPawns
 
-EMAIL, PASSWORD = ("email@example.com", "yourstrongpassword",)
+from pprint import pprint
+
+TOKEN = "eyJtoken.jwtpawnsapp.iproyalpawns"
 
 user = IPRoyalPawns()
 
-login_result = user.login(EMAIL, PASSWORD)
+user.set_jwt_token(TOKEN)
 
-if login_result["success"]:
-	print(user)
-	print("Am I logged in?", user.is_logged_in())
+balance = user.balance()
+
+pprint(balance)
+
