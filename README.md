@@ -21,7 +21,7 @@ from pyIPRoyalPawns import IPRoyalPawns
 USERNAME = ""
 PASSWORD = ""
 
-# Initialise the HoneyGain object
+# Initialise the IPRoyalPawns object
 user = IPRoyalPawns()
 
 # Optionally, when instantiating you can pass in the following attributes to the IPRoyalPawns class:
