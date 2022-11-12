@@ -4,7 +4,8 @@ EMAIL, PASSWORD = ("email@example.com", "yourstrongpassword",)
 
 user = IPRoyalPawns()
 
-if user.login(EMAIL, PASSWORD):
+login_result = user.login(EMAIL, PASSWORD)
+
+if login_result["success"]:
 	print(user)
-	print("Logged in!")
-	print("User Session:", user._session)
+	print("Am I logged in?", user.is_logged_in())

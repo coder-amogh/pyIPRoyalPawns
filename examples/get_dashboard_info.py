@@ -1,18 +1,27 @@
 from pyIPRoyalPawns import IPRoyalPawns
 
+from pprint import pprint
+
 EMAIL, PASSWORD = ("email@example.com", "yourstrongpassword",)
 
 user = IPRoyalPawns()
 
-if user.login(EMAIL, PASSWORD):
+result = user.login(EMAIL, PASSWORD)
+
+if result["success"]:
 	print(user)
-	
+
 	# Get the dashboard information
 
-	dashboard = user.dashboard()
+	devices = user.devices()
 
-	print("Balance:", dashboard["balance"])
-	print("Devices:", dashboard["devices"])
-	print("Traffic:", dashboard["traffic"])
-	print("Referral Link:", dashboard.get("referral_link", None))
+	if devices["success"]:
+		pprint(devices["json"])
 
+	balance = user.balance()
+
+	if balance["success"]:
+		pprint(balance["json"])
+else:
+	print("Failed to logged in!")
+	print("Status code:", result["response"].status_code)
