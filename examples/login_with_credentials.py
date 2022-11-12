@@ -4,7 +4,7 @@ EMAIL, PASSWORD = ("email@example.com", "yourstrongpassword",)
 
 user = IPRoyalPawns()
 
-login_result = user.login(EMAIL, PASSWORD)
+login_result = user.complete_login_flow(EMAIL, PASSWORD)
 
 if login_result["success"]:
 	print(user)

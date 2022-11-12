@@ -34,7 +34,7 @@ user = IPRoyalPawns()
 | API_VERSION | The API VERSION | /v1                            |
 
 ```PYTHON
-# Call the login method
+# Call the complete_login_flow method to login and set the JWT in self.jwt
 user.complete_login_flow(USERNAME, PASSWORD)
 ```
 
