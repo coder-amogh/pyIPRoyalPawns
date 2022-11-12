@@ -139,6 +139,18 @@ class IPRoyalPawns:
 
 		return self.__return_response(response)
 
+	def complete_login_flow(self, email: str, password: str, h_captcha_response: str = "") -> dict:
+		login_result = self.login(email, password, h_captcha_response)
+
+		if login_result["success"]:
+			token = login_result["json"]["access_token"]
+
+			self.set_jwt_token(token)
+
+			return True
+
+		return False
+
 	def me(self) -> dict:
 		"""Returns information about the logged in user. """
 		self.__handle_not_logged_in()

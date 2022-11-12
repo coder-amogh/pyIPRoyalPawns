@@ -35,7 +35,7 @@ user = IPRoyalPawns()
 
 ```PYTHON
 # Call the login method
-user.login(USERNAME, PASSWORD)
+user.complete_login_flow(USERNAME, PASSWORD)
 ```
 
 ---
