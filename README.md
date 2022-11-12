@@ -29,7 +29,9 @@ user = IPRoyalPawns()
 
 | Attribute      | Description        | Default Value                   |
 |----------------|--------------------|---------------------------------|
-| API_BASE_URL | The API BASE URL | https://pawns.iproyal.com                            |
+| API_BASE_URL | The API BASE URL | https://api.pawns.app                            |
+| API_PREFIX | The API PREFIX | /api                            |
+| API_PREFIX | The API PREFIX | /v1                            |
 
 ```PYTHON
 # Call the login method
@@ -43,21 +45,28 @@ user.login(USERNAME, PASSWORD)
 ```PYTHON
 from pyIPRoyalPawns import IPRoyalPawns
 
-# With authentication
-user.set_proxy("ip:port:username:password")
+# With authentication & protocol
+user.set_proxy("ip:port:username:password", "socks5")
 
-# Without authentication
-user.set_proxy("ip:port")
+# Without authentication & protocol
+user.set_proxy("ip:port", "socks5")
+
+# Alternative way
+user.set_socks5_proxy("ip:port")
+user.set_socks5_proxy("ip:port:username:password")
+user.set_https_proxy("ip:port")
+user.set_https_proxy("ip:port:username:password")
 ```
 
 ## Functions
 
 ---
 
-1. Get user dashboard
+1. Get user balance
 
     ```PYTHON
-    user.dashboard()
+    # Get balance and traffic sold as shown on the dashboard.
+    user.balance()
     ```
 ---
 
@@ -72,8 +81,40 @@ user.set_proxy("ip:port")
 3. Get all the devices
 
     ```PYTHON
-    # Get all the devices shown on dashboard
+    # Get all the devices
     user.devices()
+    ```
+---
+
+4. Payout history
+
+    ```PYTHON
+    # Get payout history
+    user.payout_history()
+    ```
+---
+
+5. Is Logged In
+
+    ```PYTHON
+    # Check if you're logged in
+    user.is_logged_in()
+    ```
+---
+
+6. Logout
+
+    ```PYTHON
+    # Logged out
+    user.logout()
+    ```
+---
+
+7. Set JWT Token
+
+    ```PYTHON
+    # Set JWT Token if you have one (otherwise use the login())
+    user.set_jwt_token(TOKEN)
     ```
 ---
 
@@ -83,8 +124,7 @@ user.set_proxy("ip:port")
     Exception | Reason
     --- | ---
     `NotLoggedInError` | Raised when you try to access protected routes (dashboard, payout history, etc).
-    `HTMLWebpageParserError` | Raised when the webpage parser cannot parse the response of the dashboard request (typically when you're rate limited or a broken connection)
-
+    `AlreadyLoggedInError` | Raised when you try to login when you're already logged in.
 ---
 
 ## Liked my work?
