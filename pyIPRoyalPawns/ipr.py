@@ -139,7 +139,7 @@ class IPRoyalPawns:
 
 		return self.__return_response(response)
 
-	def complete_login_flow(self, email: str, password: str, h_captcha_response: str = "") -> dict:
+	def complete_login_flow(self, email: str, password: str, h_captcha_response: str = "") -> bool:
 		login_result = self.login(email, password, h_captcha_response)
 
 		if login_result["success"]:
