@@ -159,6 +159,36 @@ class IPRoyalPawns:
 
 		return self.__return_response(response)
 
+	def my_payout_data(self) -> dict:
+		"""Returns information about the payout data for the logged in user. """
+		self.__handle_not_logged_in()
+
+		response = self.__make_request("GET", "/users/me/payout-data")
+
+		return self.__return_response(response)
+
+	def add_confirmation_code(self, action: str = "store_payout") -> dict:
+		"""Adds confirmation code for an action. """
+		self.__handle_not_logged_in()
+
+		response = self.__make_request("POST", "/users/me/confirmation-codes", json = {
+			"action": action,
+		})
+
+		return self.__return_response(response)
+
+	def payout(self, method_id: int, code: str):
+		"""Adds confirmation code for an action. """
+		self.__handle_not_logged_in()
+
+		response = self.__make_request("POST", "/users/me/payouts", json = {
+			"payout_method_id": method_id,
+		}, headers = {
+			"X-Confirmation-Code": code
+		})
+
+		return self.__return_response(response)
+
 	def devices(self, page: int = 1, items_per_page: int = 20) -> dict:
 		"""Returns all the devices information. """
 		self.__handle_not_logged_in()
