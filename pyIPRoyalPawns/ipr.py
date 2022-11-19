@@ -189,6 +189,14 @@ class IPRoyalPawns:
 
 		return self.__return_response(response)
 
+	def cancel_payout(self):
+		"""Cancels a pending payout. """
+		self.__handle_not_logged_in()
+
+		response = self.__make_request("POST", "/users/me/payouts/cancel")
+
+		return self.__return_response(response)
+
 	def devices(self, page: int = 1, items_per_page: int = 20) -> dict:
 		"""Returns all the devices information. """
 		self.__handle_not_logged_in()
