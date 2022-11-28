@@ -6,6 +6,6 @@ user = IPRoyalPawns()
 
 login_result = user.complete_login_flow(EMAIL, PASSWORD)
 
-if login_result["success"]:
+if login_result:
 	print(user)
 	print("Am I logged in?", user.is_logged_in())

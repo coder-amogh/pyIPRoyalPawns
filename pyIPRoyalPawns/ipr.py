@@ -35,8 +35,16 @@ class IPRoyalPawns:
 	def __return_response(self, response) -> dict:
 		result = {}
 
+		result["json"] = None
+
 		result["success"] = bool(response.ok)
-		result["json"] = response.json()
+
+		try:
+			# Try this line, because you don't get a response everytime (e.g: add_confirmation_code())
+			result["json"] = response.json()
+		except:
+			pass
+
 		result["response"] = response
 
 		return result
