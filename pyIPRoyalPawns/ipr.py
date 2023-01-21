@@ -220,7 +220,7 @@ class IPRoyalPawns:
 		"""Returns balance information. """
 		self.__handle_not_logged_in()
 
-		response = self.__make_request("GET", "/users/me/balance")
+		response = self.__make_request("GET", "/users/me/balance-dashboard")
 
 		return self.__return_response(response)
 
