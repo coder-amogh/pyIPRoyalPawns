@@ -6,7 +6,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = "\n" + fh.read()
 
-VERSION = "1.1.4"
+VERSION = "1.1.5"
 DESCRIPTION = "UNOFFICIAL Python bindings for IPRoyal Pawns (Pawns.app) Dashboard API"
 LONG_DESCRIPTION = "A package that allows you to connect to IPRoyal Pawns (Pawns.app) API and interact with your data."
 
